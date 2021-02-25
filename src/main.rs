@@ -15,6 +15,7 @@ egg::define_language! {
     "mul" = Mul([Id; 3]),
     "trunc" = Trunc([Id; 3]),
     "sext" = SExt([Id; 3]),
+
     Symbol(egg::Symbol),
   }
 }
@@ -42,7 +43,16 @@ fn trunc_binary(op: &str) -> Vec<egg::Rewrite<LLVM, ()>> {
 
 fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
     let mut r = Vec::new();
-    r.extend(vec![trunc_binary("add"), trunc_binary("mul")].concat());
+    r.extend(vec![
+             trunc_binary("add"),
+             trunc_binary("mul")
+             rw!(
+               "trunc-select";
+               "(trunc ?old ?new (select ?old ?cond ?t ?f))"
+               <=>
+               "(select? ?new ?cond (?trunc ?old ?new ?t)
+                                    (?trunc ?old ?new ?f))"),
+      ].concat());
     r
 }
 
