@@ -19,20 +19,34 @@ egg::define_language! {
   }
 }
 
-fn rewrite_trunc(op : &str) -> egg::Rewrite<LLVM, ()> {
-  let name = format!("trunc-{}", op);
-  let lhs : egg::Pattern<LLVM> =
-    format!("({} ?new (trunc ?old ?new ?x) (trunc ?old ?new ?y))", op).parse().unwrap();
-  let rhs : egg::Pattern<LLVM> =
-    format!("(trunc ?old ?new ({} ?old ?x ?y))", op).parse().unwrap();
-  rw!(name; lhs => rhs)
+fn build_rewrite(name: &str, lhs: &str, rhs: &str) -> egg::Rewrite<LLVM, ()> {
+  let a : egg::Pattern<LLVM> = lhs.parse().unwrap();
+  let b : egg::Pattern<LLVM> = rhs.parse().unwrap();
+  rw!(name; a => b)
+}
+
+fn trunc_binary(op : &str) -> Vec<egg::Rewrite<LLVM, ()>> {
+  let name1 = format!("trunc-{}-1", op);
+  let name2 = format!("trunc-{}-2", op);
+  let lhs = format!("({} ?new (trunc ?old ?new ?x) (trunc ?old ?new ?y))", op);
+  let rhs = format!("(trunc ?old ?new ({} ?old ?x ?y))", op);
+  vec![
+    build_rewrite(&name1, &lhs, &rhs),
+    build_rewrite(&name2, &rhs, &lhs)
+  ]
+}
+
+fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
+  let mut r = Vec::new();
+  r.extend(
+    vec![
+    trunc_binary("add"),
+    trunc_binary("mul")].concat());
+  r
 }
 
 fn saturate(expr : &egg::RecExpr<LLVM>) -> EGraph {
-  let mut rules = Vec::new();
-  rules.push(rewrite_trunc("add"));
-  
-  egg::Runner::default().with_expr(&expr).run(&rules).egraph
+  egg::Runner::default().with_expr(&expr).run(&rules()).egraph
 }
 
 fn is_equivalent(x_s : &str, y_s : &str) -> bool {
@@ -45,7 +59,16 @@ fn is_equivalent(x_s : &str, y_s : &str) -> bool {
 fn trunc_add() {
   assert!(is_equivalent(
       "(add 8 (trunc 16 8 a) (trunc 16 8 b))",
-      "(trunc 16 8 (add 16 a b))"));
+      "(trunc 16 8 (add 16 a b))",
+      ));
+}
+
+#[test]
+fn trunc_mul() {
+  assert!(is_equivalent(
+      "(mul 8 (trunc 16 8 a) (trunc 16 8 b))",
+      "(trunc 16 8 (mul 16 a b))"
+      ));
 }
 
 fn main() {
