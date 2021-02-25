@@ -13,6 +13,7 @@ egg::define_language! {
 
     "add" = Add([Id; 3]),
     "mul" = Mul([Id; 3]),
+    "sub" = Sub([Id; 3]),
     "trunc" = Trunc([Id; 3]),
     "sext" = SExt([Id; 3]),
     "select" = Select([Id; 4]),
@@ -43,7 +44,18 @@ fn trunc_binary(op: &str) -> Vec<egg::Rewrite<LLVM, ()>> {
 }
 
 fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
-    let mut r = Vec::new();
+    let mut r = vec![
+        rw!("add-assoc"; "(add ?bw ?a ?b)" => "(add ?bw ?b ?a)"),
+        rw!("mul-assoc"; "(mul ?bw ?a ?b)" => "(mul ?bw ?b ?a)"),
+        rw!("add-comm"; 
+          "(add ?bw (add ?bw ?a ?b) ?c)"
+          =>
+          "(add ?bw ?a (add ?bw ?b ?c))"),
+        rw!("mul-comm"; 
+          "(mul ?bw (mul ?bw ?a ?b) ?c)"
+          =>
+          "(mul ?bw ?a (mul ?bw ?b ?c))"),
+    ];
     r.extend(
         vec![
             trunc_binary("add"),
