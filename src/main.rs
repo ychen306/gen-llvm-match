@@ -103,7 +103,23 @@ fn trunc_select() {
     assert!(is_equivalent(
         "(select 8 c (trunc 16 8 a) (trunc 16 8 b))",
         "(trunc 16 8 (select 16 c a b))"
-    ))
+    ));
+}
+
+#[test]
+fn reorder_add() {
+    assert!(is_equivalent(
+        "(add 8 a (add 8 b (add 8 c d)))",
+        "(add 8 d (add 8 c (add 8 b a)))"
+    ));
+}
+
+#[test]
+fn reorder_mul() {
+    assert!(is_equivalent(
+        "(mul 8 a (mul 8 b (mul 8 c d)))",
+        "(mul 8 d (mul 8 c (mul 8 b a)))"
+    ));
 }
 
 fn main() {
