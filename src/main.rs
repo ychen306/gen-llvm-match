@@ -15,6 +15,7 @@ egg::define_language! {
     "mul" = Mul([Id; 3]),
     "trunc" = Trunc([Id; 3]),
     "sext" = SExt([Id; 3]),
+    "select" = Select([Id; 4]),
 
     Symbol(egg::Symbol),
   }
@@ -43,16 +44,19 @@ fn trunc_binary(op: &str) -> Vec<egg::Rewrite<LLVM, ()>> {
 
 fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
     let mut r = Vec::new();
-    r.extend(vec![
-             trunc_binary("add"),
-             trunc_binary("mul")
-             rw!(
+    r.extend(
+        vec![
+            trunc_binary("add"),
+            trunc_binary("mul"),
+            rw!(
                "trunc-select";
                "(trunc ?old ?new (select ?old ?cond ?t ?f))"
                <=>
-               "(select? ?new ?cond (?trunc ?old ?new ?t)
-                                    (?trunc ?old ?new ?f))"),
-      ].concat());
+               "(select ?new ?cond (trunc ?old ?new ?t)
+                                   (trunc ?old ?new ?f))"),
+        ]
+        .concat(),
+    );
     r
 }
 
@@ -80,6 +84,14 @@ fn trunc_mul() {
         "(mul 8 (trunc 16 8 a) (trunc 16 8 b))",
         "(trunc 16 8 (mul 16 a b))"
     ));
+}
+
+#[test]
+fn trunc_select() {
+    assert!(is_equivalent(
+        "(select 8 c (trunc 16 8 a) (trunc 16 8 b))",
+        "(trunc 16 8 (select 16 c a b))"
+    ))
 }
 
 fn main() {
