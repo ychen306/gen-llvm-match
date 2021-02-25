@@ -29,7 +29,7 @@ fn build_rewrite2(name: &str, lhs: &str, rhs: &str) -> Vec<egg::Rewrite<LLVM, ()
   let name2 = format!("{}-2", name);
   vec![
     build_rewrite(name, lhs, rhs),
-    build_rewrite(name2, rhs, lhs),
+    build_rewrite(&name2, rhs, lhs),
   ]
 }
 
@@ -37,7 +37,7 @@ fn trunc_binary(op : &str) -> Vec<egg::Rewrite<LLVM, ()>> {
   let name = format!("trunc-{}-1", op);
   let lhs = format!("({} ?new (trunc ?old ?new ?x) (trunc ?old ?new ?y))", op);
   let rhs = format!("(trunc ?old ?new ({} ?old ?x ?y))", op);
-  build_rewrite2(name, lhs, rhs)
+  build_rewrite2(&name, &lhs, &rhs)
 }
 
 fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
