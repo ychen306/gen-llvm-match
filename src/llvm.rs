@@ -88,7 +88,6 @@ fn add_precise(op : &str, ext : &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewr
             ext = ext
         );
         build_rewrite2(&name, &lhs, &rhs)
-        vec![build_rewrite(&name, &lhs, &rhs)]
     }
 }
 

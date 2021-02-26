@@ -125,6 +125,3 @@ fn reorder_mul() {
         "(mul 8 d (mul 8 c (mul 8 b a)))"
     ));
 }
-
-#[cfg(test)]
-mod test;
