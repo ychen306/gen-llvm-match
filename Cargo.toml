@@ -1,5 +1,5 @@
 [package]
-name = "regraph"
+name = "llvm"
 version = "0.1.0"
 authors = ["tom <ychen306@mit.edu>"]
 edition = "2018"
