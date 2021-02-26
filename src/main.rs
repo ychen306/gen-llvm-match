@@ -214,15 +214,15 @@ fn trunc_abs() {
     let diff32 = "(sub 32 (sext 8 32 x) (sext 8 32 y))";
     let abs16 = format!(
         "(select 16 (slt 16 {diff16} (const 16 0))
-                                  {diff16} 
-                                  (sub 16 (sext 8 16 y) (sext 8 16 x)))",
+                     {diff16} 
+                     (sub 16 (sext 8 16 y) (sext 8 16 x)))",
         diff16 = diff16
     );
     let abs16_2 = format!(
         "(trunc 32 16
-    (select 32 (slt 32 {diff32} (const 32 0))
-               {diff32}
-               (sub 32 (sext 8 32 y) (sext 8 32 x))))",
+                (select 32 (slt 32 {diff32} (const 32 0))
+                           {diff32}
+                           (sub 32 (sext 8 32 y) (sext 8 32 x))))",
         diff32 = diff32
     );
     assert!(is_equivalent(&abs16, &abs16_2));
