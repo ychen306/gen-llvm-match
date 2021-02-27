@@ -69,9 +69,7 @@ fn power_of_two_ceil(n: u32) -> u32 {
 //  => (?ext 16 32 (?ext 8 16 x) (?ext 8 16 x))
 fn add_precise(op: &str, ext: &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewrite<LLVM, ()>> {
     let small = power_of_two_ceil(old_bw + 1);
-    if small == new_bw && false {
-        Vec::new()
-    } else {
+    if small < new_bw {
         let name = format!("{}-{}-precise-{}-{}", op, ext, old_bw, new_bw);
         let lhs = format!(
             "({op} {new} ({ext} {old} {new} ?x) ({ext} {old} {new} ?y))",
@@ -90,6 +88,8 @@ fn add_precise(op: &str, ext: &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewrit
             ext = ext
         );
         build_rewrite2(&name, &lhs, &rhs)
+    } else {
+        Vec::new()
     }
 }
 
