@@ -1,8 +1,8 @@
 use egg;
 use egg::rewrite as rw;
-use egg::Id;
+pub use egg::Id;
 
-type EGraph = egg::EGraph<LLVM, ()>;
+pub type EGraph = egg::EGraph<LLVM, ()>;
 
 egg::define_language! {
   // TODO: add floating point
@@ -65,7 +65,7 @@ fn power_of_two_ceil(n: u32) -> u32 {
     (n as f64).log2().ceil().powi(2) as u32
 }
 
-fn add_precise(op : &str, ext : &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewrite<LLVM, ()>> {
+fn add_precise(op: &str, ext: &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewrite<LLVM, ()>> {
     let small = power_of_two_ceil(old_bw + 1);
     if small == new_bw && false {
         Vec::new()
@@ -76,7 +76,7 @@ fn add_precise(op : &str, ext : &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewr
             op = op,
             old = old_bw,
             new = new_bw,
-            ext=ext
+            ext = ext
         );
         let rhs = format!(
             "({ext} {small} {new}
@@ -193,7 +193,7 @@ pub fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
             for k in bitwidths.iter() {
                 r.extend(cmp_sext(*i, *j, *k));
                 // ((? j k (? i j x)))
-                if k < j && j > i {
+                if k < j && j > i && k != i {
                     let lhs = format!("(trunc {j} {k} (sext {i} {j} ?x))", i = i, j = j, k = k);
                     let lhs_z = format!("(trunc {j} {k} (zext {i} {j} ?x))", i = i, j = j, k = k);
 
@@ -209,6 +209,7 @@ pub fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
                     } else if k < i {
                         format!("(trunc {i} {k} ?x)", i = i, k = k)
                     } else {
+                      // FIXME!! this is broken when we do bidirectional rules.
                         "?x".to_string()
                     };
 
@@ -234,14 +235,14 @@ pub fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
     r
 }
 
-pub fn saturate(expr: &egg::RecExpr<LLVM>) -> EGraph {
+pub fn saturate(expr: &egg::RecExpr<LLVM>) -> (EGraph, Id) {
     let runner = egg::Runner::default().with_expr(&expr).run(&rules());
-    println!("num enodes: {}", runner.egraph.total_size());
-    runner.egraph
+    (runner.egraph, runner.roots[0])
 }
 
 pub fn is_equivalent(x_s: &str, y_s: &str) -> bool {
     let x = x_s.parse().unwrap();
     let y = y_s.parse().unwrap();
-    !saturate(&x).equivs(&x, &y).is_empty()
+    let (egraph, _) = saturate(&x);
+    !egraph.equivs(&x, &y).is_empty()
 }
