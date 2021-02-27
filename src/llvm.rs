@@ -80,7 +80,7 @@ fn add_precise(op: &str, ext: &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewrit
         );
         let rhs = format!(
             "({ext} {small} {new}
-                           ({op} {small} ({ext} {old} {small} ?x) ({ext} {old} {small} ?y)))",
+                    ({op} {small} ({ext} {old} {small} ?x) ({ext} {old} {small} ?y)))",
             op = op,
             old = old_bw,
             small = small,
