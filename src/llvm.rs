@@ -154,13 +154,27 @@ pub fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
         rw!("add-assoc"; "(add ?bw ?a ?b)" => "(add ?bw ?b ?a)"),
         rw!("mul-assoc"; "(mul ?bw ?a ?b)" => "(mul ?bw ?b ?a)"),
         rw!("add-comm"; 
-        "(add ?bw (add ?bw ?a ?b) ?c)"
-        =>
-        "(add ?bw ?a (add ?bw ?b ?c))"),
+            "(add ?bw (add ?bw ?a ?b) ?c)"
+              =>
+            "(add ?bw ?a (add ?bw ?b ?c))"),
         rw!("mul-comm"; 
             "(mul ?bw (mul ?bw ?a ?b) ?c)"
             =>
             "(mul ?bw ?a (mul ?bw ?b ?c))"),
+
+        //rw!("not-not"; "(not (not ?x))" => "?x"),
+        rw!("swap-select"; 
+            "(select ?bw ?c ?x ?y)" => "(select ?bw (not ?c) ?y ?x)"),
+
+        rw!("not-slt"; "(not (slt ?bw ?a ?b))" => "(sge ?bw ?a ?b)"),
+        rw!("not-sge"; "(not (sge ?bw ?a ?b))" => "(slt ?bw ?a ?b)"),
+        rw!("not-ult"; "(not (ult ?bw ?a ?b))" => "(uge ?bw ?a ?b)"),
+        rw!("not-uge"; "(not (uge ?bw ?a ?b))" => "(ult ?bw ?a ?b)"),
+
+        rw!("not-sgt"; "(not (sgt ?bw ?a ?b))" => "(sle ?bw ?a ?b)"),
+        rw!("not-sle"; "(not (sle ?bw ?a ?b))" => "(sgt ?bw ?a ?b)"),
+        rw!("not-ugt"; "(not (ugt ?bw ?a ?b))" => "(ule ?bw ?a ?b)"),
+        rw!("not-ule"; "(not (ule ?bw ?a ?b))" => "(ugt ?bw ?a ?b)"),
     ];
     r.extend(
         vec![

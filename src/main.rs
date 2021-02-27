@@ -138,3 +138,11 @@ fn reorder_mul() {
         "(mul 8 d (mul 8 c (mul 8 b a)))"
     ));
 }
+
+#[test]
+fn swap_select() {
+    assert!(is_equivalent(
+        "(select 8 (slt 8 x y) x y)",
+        "(select 8 (sge 8 x y) y x)"
+    ));
+}
