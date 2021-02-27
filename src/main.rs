@@ -23,6 +23,21 @@ fn trunc_add() {
 }
 
 #[test]
+fn trunc_add2() {
+    assert!(is_equivalent(
+        "(add 16 (zext 8 16 x)
+                 (add 16 (zext 8 16 y)
+                         (zext 8 16 z))))",
+
+        "(trunc 32 16
+            (add 32 (zext 8 32 x)
+                    (add 32 (zext 8 32 y)
+                            (zext 8 32 z))))"
+    ));
+}
+
+
+#[test]
 fn trunc_mul() {
     assert!(is_equivalent(
         "(mul 8 (trunc 16 8 a) (trunc 16 8 b))",
