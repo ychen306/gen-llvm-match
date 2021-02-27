@@ -2,10 +2,7 @@ mod llvm;
 
 use egg::Language;
 use llvm::EGraph;
-use std::cmp;
 use llvm::is_equivalent;
-use std::collections::HashMap;
-use std::path::Path;
 
 fn main() {
     let sad16 = format!("(add 16 {x} {x})", x=abs16());
