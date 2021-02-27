@@ -75,6 +75,15 @@ fn trunc_sext_add() {
 }
 
 #[test]
+fn trunc_sext_add2() {
+    assert!(is_equivalent(
+        "(trunc 16 8 (add 16 (sext 8 16 a) (sext 8 16 b)))",
+        "(add 8 a b)",
+    ));
+}
+
+
+#[test]
 fn test_sub_precise() {
     assert!(is_equivalent(
         "(sub 32 (sext 8 32 x) (sext 8 32 y))",
@@ -145,4 +154,37 @@ fn swap_select() {
         "(select 8 (slt 8 x y) x y)",
         "(select 8 (sge 8 x y) y x)"
     ));
+}
+
+#[test]
+fn lt_sub() {
+    assert!(is_equivalent(
+        "(slt 8 x y)",
+        "(slt 32 (sub 32 (sext 8 32 x) (sext 8 32 y)) 
+                 (const 32 0))"));
+}
+
+#[test]
+fn ult_sub() {
+    assert!(is_equivalent(
+        "(ult 8 x y)",
+        "(slt 32 (sub 32 (zext 8 32 x) (zext 8 32 y)) 
+                 (const 32 0))"));
+}
+
+#[test]
+fn ult_sub2() {
+    assert!(is_equivalent(
+        "(slt 16 (sub 16 (zext 8 16 x) (zext 8 16 y)) 
+                 (const 16 0))",
+        "(ult 8 x y)",
+        ))
+}
+
+#[test]
+fn abs() {
+  assert!(is_equivalent(
+      &format!("(trunc 16 8 {})", abs16()),
+      "(select 8 (ult 8 x y) (sub 8 x y) (sub 8 y x))",
+      ));
 }

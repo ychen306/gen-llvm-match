@@ -61,14 +61,10 @@ fn trunc_binary(op: &str) -> Vec<egg::Rewrite<LLVM, ()>> {
     build_rewrite2(&name, &lhs, &rhs)
 }
 
-fn power_of_two_ceil(n: u32) -> u32 {
-    (n as f64).log2().ceil().powi(2) as u32
-}
-
 // (?op 32 (?ext 8 32 x) (?ext 8 32 y))
 //  => (?ext 16 32 (?ext 8 16 x) (?ext 8 16 x))
 fn add_precise(op: &str, ext: &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewrite<LLVM, ()>> {
-    let small = power_of_two_ceil(old_bw + 1);
+    let small = old_bw * 2;
     if small < new_bw {
         let name = format!("{}-{}-precise-{}-{}", op, ext, old_bw, new_bw);
         let lhs = format!(
@@ -96,7 +92,7 @@ fn add_precise(op: &str, ext: &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewrit
 // (sub 32 (zext 8 32 x) (zext 8 32 y))
 //   => (*sext* 16 32 (sub (zext 8 16 x) (zext 8 16 y)))
 fn sub_precise(old_bw: u32, new_bw: u32) -> Vec<egg::Rewrite<LLVM, ()>> {
-    let small = power_of_two_ceil(old_bw + 1);
+    let small = old_bw * 2;
     if small == new_bw && false {
         Vec::new()
     } else {
@@ -149,6 +145,32 @@ fn cmp_sext(old_bw: u32, new_bw1: u32, new_bw2: u32) -> Vec<egg::Rewrite<LLVM, (
     rules
 }
 
+fn lt_to_sub() -> Vec<egg::Rewrite<LLVM, ()>> {
+  let mut rules = Vec::new();
+
+  let ops = [
+    ("slt", "sext", "slt"),
+    ("sle", "sext", "sle"),
+    ("ult", "zext", "slt"),
+    ("ule", "zext", "sle")
+  ];
+
+  for (lt, ext, lt2) in ops.iter() {
+    for bw in [8, 16, 32/*, 64*/].iter() {
+      let lhs = format!("({} {} ?x ?y)", lt, bw);
+      let rhs = format!("({lt} {new} 
+                            (sub {new} ({ext} {old} {new} ?x)
+                                       ({ext} {old} {new} ?y))
+                            (const {new} 0))",
+                            lt=lt2, ext=ext, old=bw, new=bw*2);
+      let name = format!("{}-{}-to-sub", lt, bw);
+      rules.extend(build_rewrite2(&name, &lhs, &rhs));
+    }
+  }
+
+  rules
+}
+
 pub fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
     let mut r = vec![
         rw!("add-assoc"; "(add ?bw ?a ?b)" => "(add ?bw ?b ?a)"),
@@ -175,9 +197,15 @@ pub fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
         rw!("not-sle"; "(not (sle ?bw ?a ?b))" => "(sgt ?bw ?a ?b)"),
         rw!("not-ugt"; "(not (ugt ?bw ?a ?b))" => "(ule ?bw ?a ?b)"),
         rw!("not-ule"; "(not (ule ?bw ?a ?b))" => "(ugt ?bw ?a ?b)"),
+
+        rw!("sext-trunc-cancel";
+            "(trunc ?bw1 ?bw2 (sext ?bw2 ?bw1 ?x))" => "?x"),
+        rw!("zext-trunc-cancel";
+            "(trunc ?bw1 ?bw2 (zext ?bw2 ?bw1 ?x))" => "?x"),
     ];
     r.extend(
         vec![
+            lt_to_sub(),
             trunc_binary("add"),
             trunc_binary("sub"),
             trunc_binary("mul"),
