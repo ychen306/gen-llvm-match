@@ -43,7 +43,7 @@ egg::define_language! {
 fn build_rewrite(name: &str, lhs: &str, rhs: &str) -> egg::Rewrite<LLVM, ()> {
     let a: egg::Pattern<LLVM> = lhs.parse().unwrap();
     let b: egg::Pattern<LLVM> = rhs.parse().unwrap();
-    rw!(name; a => b)
+    rw!(name; { a } => { b })
 }
 
 fn build_rewrite2(name: &str, lhs: &str, rhs: &str) -> Vec<egg::Rewrite<LLVM, ()>> {
@@ -65,6 +65,8 @@ fn power_of_two_ceil(n: u32) -> u32 {
     (n as f64).log2().ceil().powi(2) as u32
 }
 
+// (?op 32 (?ext 8 32 x) (?ext 8 32 y))
+//  => (?ext 16 32 (?ext 8 16 x) (?ext 8 16 x))
 fn add_precise(op: &str, ext: &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewrite<LLVM, ()>> {
     let small = power_of_two_ceil(old_bw + 1);
     if small == new_bw && false {
@@ -91,6 +93,8 @@ fn add_precise(op: &str, ext: &str, old_bw: u32, new_bw: u32) -> Vec<egg::Rewrit
     }
 }
 
+// (sub 32 (zext 8 32 x) (zext 8 32 y))
+//   => (*sext* 16 32 (sub (zext 8 16 x) (zext 8 16 y)))
 fn sub_precise(old_bw: u32, new_bw: u32) -> Vec<egg::Rewrite<LLVM, ()>> {
     let small = power_of_two_ceil(old_bw + 1);
     if small == new_bw && false {
