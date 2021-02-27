@@ -199,18 +199,13 @@ pub fn rules() -> Vec<egg::Rewrite<LLVM, ()>> {
 
                     let rhs = if k > i {
                         format!("(sext {i} {k} ?x)", i = i, k = k)
-                    } else if k < i {
-                        format!("(trunc {i} {k} ?x)", i = i, k = k)
                     } else {
-                        "?x".to_string()
+                        format!("(trunc {i} {k} ?x)", i = i, k = k)
                     };
                     let rhs_z = if k > i {
                         format!("(zext {i} {k} ?x)", i = i, k = k)
-                    } else if k < i {
-                        format!("(trunc {i} {k} ?x)", i = i, k = k)
                     } else {
-                      // FIXME!! this is broken when we do bidirectional rules.
-                        "?x".to_string()
+                        format!("(trunc {i} {k} ?x)", i = i, k = k)
                     };
 
                     let name = format!("trunc-sext-{i}-{j}-{k}", i = i, j = j, k = k);
