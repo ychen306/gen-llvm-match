@@ -7,47 +7,11 @@ use llvm::is_equivalent;
 use std::collections::HashMap;
 use std::path::Path;
 
-fn max_size(memo: &mut HashMap<llvm::Id, u32>, egraph: &EGraph, id: llvm::Id) -> u32 {
-    match memo.get(&id) {
-        Some(n) => *n,
-        None => {
-            let n = egraph[id].iter().fold(0, |acc, node: &llvm::LLVM| {
-              println!("??????? {:?}, {}", node, id);
-                //println!("??????? {:?} {}", node, id);
-                cmp::max(
-                    acc,
-                    1 + node.fold(0, |acc2, id2| {
-                        if id2 == id {
-                            println!("wtf??????? {:?}", node);
-                        }
-                        assert!(id2 != id);
-                        println!("recurding on child id {}", id2);
-                        cmp::max(acc2, max_size(memo, egraph, id2))
-                    }),
-                )
-            });
-            memo.insert(id, n);
-            n
-        }
-    }
-}
-
 fn main() {
     let sad16 = format!("(add 16 {x} {x})", x=abs16());
-    //llvm::saturate(&sad16.parse().unwrap()).dot().to_png(Path::new("sad16.png")).unwrap();
     let (egraph, _) = llvm::saturate(&sad16.parse().unwrap());
-    println!("num enodes {}", egraph.total_size());
     //egraph.dot().to_png(Path::new("sad16.png")).unwrap();
-    //let expr = "(slt 16 (sub 16 (sext 8 16 x) (sext 8 16 y)) (const 16 0))"
-    //    .parse()
-    //    .unwrap();
-    //let (egraph, id) = llvm::saturate(&expr);
-    //println!("max depth? {}", max_size(&mut HashMap::new(), &egraph, id));
-    //let sad32 = format!("(trunc 32 16 (add 32 {x} {x}))", x=abs32());
-    //let equiv = is_equivalent(&sad16, &sad32);
-    //println!("sad16 = {}", sad16);
-    //println!("sad32 = {}", sad32);
-    //println!("equiv? = {}", equiv);
+    println!("num enodes {}", egraph.total_size());
 }
 
 #[test]
